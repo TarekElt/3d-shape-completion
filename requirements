@@ -1,0 +1,7 @@
+numpy
+scipy
+trimesh
+rtree
+torch
+tqdm
+tensorboard
