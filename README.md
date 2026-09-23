@@ -1,12 +1,14 @@
 # 3D Shape Completion Using an Encoder–Predictor Network (EPN)
 
-A lightweight 3D reconstruction pipeline for completing incomplete mobile-style 3D scans using TSDF voxel representations and a deep learning-based Encoder–Predictor Network.
+A PyTorch pipeline that learns to reconstruct missing 3D geometry from partial Truncated Signed Distance Field (TSDF) observations.
 
 ---
 
 ## Overview
 
-This project explores 3D shape completion using volumetric deep learning. The system takes an incomplete 3D shape represented as a partial Truncated Signed Distance Field (TSDF) and predicts a completed 3D reconstruction.
+Consumer-grade 3D scans often contain holes, occluded surfaces, and incomplete geometry. This project explores whether a lightweight 3D Encoder-Predictor Network can infer the missing structure of an object from a partial volumetric observation.
+
+The current implementation uses synthetic primitives to develop and evaluate the reconstruction pipeline in a controlled setting before expanding to real mobile-phone scans.
 
 The long-term goal of this project is to improve incomplete or noisy mobile phone-based 3D scans by reconstructing missing geometry automatically. Since consumer-grade scans often suffer from occlusion, missing surfaces, and low-quality geometry, this project investigates whether a lightweight neural reconstruction pipeline can learn to infer missing 3D structure from partial observations.
 
@@ -125,23 +127,104 @@ Key findings:
 ├── requirements.txt
 └── .gitignore
 ```
+## Setup
 
----
+### 1. Clone the repository
 
-## Future Goals
+```bash
+git clone https://github.com/TarekElt/3d-shape-completion.git
+cd 3d-shape-completion
+```
 
-Planned future development includes:
+### 2. Create a virtual environment
 
-* More complex synthetic geometry
-* Realistic scan corruption simulation
-* Real mobile-phone scan integration
-* Improved reconstruction architectures
-* Sparse voxel and implicit representations
-* Better generalization across object categories
+#### Windows PowerShell
 
-The long-term objective is to create a practical reconstruction pipeline capable of improving incomplete consumer-grade 3D scans while remaining lightweight and computationally accessible.
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
 
----
+#### macOS or Linux
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+PyTorch automatically uses CUDA when a compatible GPU and CUDA-enabled PyTorch build are available. Training also supports CPU and Apple Silicon MPS, although 64³ experiments are considerably faster on a GPU.
+
+## Run the Pipeline
+
+### 1. Generate synthetic meshes
+
+```bash
+python scripts/generate_primitives.py --out-root data/ModelNet10 --class simulated --n 200
+```
+
+This creates randomized training and testing meshes under `data/ModelNet10/simulated/`.
+
+### 2. Convert the meshes to TSDF volumes
+
+Create the output directory:
+
+```powershell
+New-Item -ItemType Directory -Force outputs/tsdf
+```
+
+Convert all generated meshes using Windows PowerShell:
+
+```powershell
+Get-ChildItem data/ModelNet10/simulated -Recurse -Filter *.off | ForEach-Object {
+    python scripts/generate_tsdf.py `
+        --file $_.FullName `
+        --grid 64 `
+        --partial-type random-half `
+        --out ("outputs/tsdf/" + $_.BaseName + "_tsdf.npz")
+}
+```
+
+Equivalent command for macOS or Linux:
+
+```bash
+mkdir -p outputs/tsdf
+
+find data/ModelNet10/simulated -name "*.off" -print0 |
+while IFS= read -r -d '' file; do
+    name="$(basename "${file%.*}")"
+
+    python scripts/generate_tsdf.py \
+        --file "$file" \
+        --grid 64 \
+        --partial-type random-half \
+        --out "outputs/tsdf/${name}_tsdf.npz"
+done
+```
+
+### 3. Train the model
+
+```bash
+python scripts/train_model.py \
+    --data-root outputs/tsdf \
+    --pattern "*_tsdf.npz" \
+    --G 64 \
+    --model-mode full \
+    --epochs 20 \
+    --batch-size 4 \
+    --mixed-precision
+```
+
+Remove `--mixed-precision` when training without a CUDA GPU.
+
+Checkpoints, epoch metrics, and optional TensorBoard logs are written to `outputs/checkpoints/`.
+
 
 ## Technologies Used
 
@@ -166,6 +249,22 @@ These can be found in the `/docs` and `/outputs` directories.
 
 ---
 
+## Current Limitations
+
+- Training data currently focuses on synthetic primitives
+- Occlusion simulation approximates real scanning artifacts
+- Dense 64³ voxel grids require substantially more memory than 32³ grids
+- Generalization to complex real-world objects has not yet been established
+
+## Next Steps
+
+- Integrate real mobile-phone scan data
+- Expand training to more complex object categories
+- Add more realistic scan noise and viewpoint simulation
+- Compare dense voxels with sparse or implicit representations
+- Evaluate reconstruction quality with additional geometric metrics
+- Package inference and visualization into a simpler demonstration workflow
+  
 ## References
 
 * Dai et al., *Shape Completion Using 3D Encoder–Predictor CNNs and Shape Synthesis* (CVPR 2017)
@@ -178,6 +277,6 @@ These can be found in the `/docs` and `/outputs` directories.
 
 ## Author
 
-Tarek Eltantawy
-University of Miami
-Computer Science
+**Tarek Eltantawy**  
+B.S./M.S. Computer Science, University of Miami  
+[LinkedIn](https://www.linkedin.com/in/tarek-eltantawy-3b91b5251)
