@@ -10,10 +10,6 @@ Consumer-grade 3D scans often contain holes, occluded surfaces, and incomplete g
 
 The current implementation uses synthetic primitives to develop and evaluate the reconstruction pipeline in a controlled setting before expanding to real mobile-phone scans.
 
-The long-term goal of this project is to improve incomplete or noisy mobile phone-based 3D scans by reconstructing missing geometry automatically. Since consumer-grade scans often suffer from occlusion, missing surfaces, and low-quality geometry, this project investigates whether a lightweight neural reconstruction pipeline can learn to infer missing 3D structure from partial observations.
-
-The current implementation focuses on synthetic primitive-based data in order to build and validate the reconstruction pipeline in a controlled environment before scaling toward more complex geometry and real-world scan data.
-
 ---
 
 ## Current Features
