@@ -326,8 +326,13 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     p.add_argument('--batch-size', type=int, default=4)
     p.add_argument('--lr', type=float, default=1e-3)
     p.add_argument('--G', type=int, default=32, help='grid resolution (will be inferred if not provided)')
-    p.add_argument('--model-mode', type=str, choices=['small', 'full', 'unet', 'conditioned'], default='small',
-                   help='model size/mode to pass to get_model')
+    p.add_argument(
+    '--model-mode',
+    type=str,
+    choices=['small', 'medium', 'large'],
+    default='small',
+    help='model capacity to pass to get_model'
+)
     p.add_argument('--channels', type=str, default='partial',
                    help='comma-separated channels to include as input (e.g. partial,vis,occ,camera_dir)')
     p.add_argument('--save-dir', type=str, default='outputs/checkpoints', help='where to save checkpoints and logs')
