@@ -245,8 +245,6 @@ Checkpoints, epoch metrics, and optional TensorBoard logs are written to `output
 
 ## Documentation
 
-## Documentation
-
 - [Technical Report](docs/technical_report.docx)
 - [Project Presentation](docs/project_presentation.pdf)
 - [Baseline Reconstruction Results](outputs/comparisons/baseline_model_32_resolution.png)
