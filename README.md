@@ -10,6 +10,11 @@ Consumer-grade 3D scans often contain holes, occluded surfaces, and incomplete g
 
 The current implementation uses synthetic primitives to develop and evaluate the reconstruction pipeline in a controlled setting before expanding to real mobile-phone scans.
 
+
+## Example Reconstruction
+
+![Final 64-cubed model reconstruction results](outputs/comparisons/final_model_64_batchnorm.png)
+
 ---
 
 ## Current Features
@@ -29,21 +34,7 @@ The current implementation uses synthetic primitives to develop and evaluate the
 
 The current reconstruction pipeline:
 
-```text
-3D Shape
-   ↓
-TSDF Generation
-   ↓
-Partial TSDF Occlusion
-   ↓
-Encoder–Predictor Network
-   ↓
-Predicted TSDF
-   ↓
-Marching Cubes
-   ↓
-Reconstructed Mesh
-```
+![3D shape completion pipeline](outputs/pipeline/reconstruction_pipeline.png)
 
 ---
 
@@ -55,7 +46,8 @@ Synthetic 3D primitives are generated using Python scripts, including:
 
 * Cubes
 * Spheres
-* Combined cube structures (L-shaped geometry)
+* Cylinders
+* Combined cube structures forming L-shaped geometry
 
 Each generated shape is converted into:
 
@@ -64,7 +56,7 @@ Each generated shape is converted into:
 * Occupancy grid
 * Alignment bounds
 
-The current implementation simulates incompleteness using half-slice occlusion to mimic missing geometry commonly found in partial scans.
+The implementation can simulate incomplete observations using fixed-half, random-half, camera-axis, and spherical occlusion. Optional Gaussian noise can also be added to observed TSDF regions.
 
 ### Model Architecture
 
@@ -81,6 +73,8 @@ The encoder extracts spatial geometric features from the partial TSDF input, whi
 ### Mesh Reconstruction
 
 After prediction, the Marching Cubes algorithm extracts the zero-level surface from the predicted TSDF volume to generate a reconstructed mesh.
+
+Mesh extraction and visualization were used during the experimental evaluation; this repository currently focuses on data generation, TSDF preprocessing, and model training.
 
 ---
 
@@ -105,6 +99,20 @@ Key findings:
 * BatchNorm3D improves stability and convergence
 * Increased channel capacity improves reconstruction of more complex geometry
 * Correct TSDF preprocessing was critical for stable training
+
+### Experiment Progression
+
+#### Baseline at 32³ Resolution
+
+![Baseline model at 32-cubed resolution](outputs/comparisons/baseline_model_32_resolution.png)
+
+#### Resolution Upgrade from 32³ to 64³
+
+![Resolution comparison from 32-cubed to 64-cubed](outputs/comparisons/resolution_upgrade_32_to_64.png)
+
+#### Final 64³ Model with BatchNorm3D
+
+![Final model with BatchNorm3D](outputs/comparisons/final_model_64_batchnorm.png)
 
 ---
 
@@ -211,7 +219,7 @@ python scripts/train_model.py \
     --data-root outputs/tsdf \
     --pattern "*_tsdf.npz" \
     --G 64 \
-    --model-mode full \
+    --model-mode medium \
     --epochs 20 \
     --batch-size 4 \
     --mixed-precision
@@ -224,24 +232,26 @@ Checkpoints, epoch metrics, and optional TensorBoard logs are written to `output
 
 ## Technologies Used
 
+* Python
 * PyTorch
 * NumPy
+* SciPy
 * Trimesh
-* Marching Cubes
-* Python
+* CUDA and mixed-precision training
+* TensorBoard
+* Marching Cubes surface extraction
 
 ---
 
 ## Documentation
 
-Additional project materials:
+## Documentation
 
-* Final report
-* Presentation slides
-* Reconstruction comparisons
-* Experimental results
-
-These can be found in the `/docs` and `/outputs` directories.
+- [Technical Report](docs/technical_report.docx)
+- [Project Presentation](docs/project_presentation.pdf)
+- [Baseline Reconstruction Results](outputs/comparisons/baseline_model_32_resolution.png)
+- [Resolution Upgrade Results](outputs/comparisons/resolution_upgrade_32_to_64.png)
+- [Final Model Results](outputs/comparisons/final_model_64_batchnorm.png)
 
 ---
 
